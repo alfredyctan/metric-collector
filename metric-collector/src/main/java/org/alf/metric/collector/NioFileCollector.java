@@ -45,7 +45,9 @@ public class NioFileCollector implements FileCollector<FileChannel> {
 	public void collect(FileChannel source) {
 		try {
 			int length = 0;
+			int read = 0;
 			while ((length = source.read(sourceBuffer)) != -1) {
+				read += length;
 				sourceBuffer.position(0);   //set sourceBuffer to be readable
 				sourceBuffer.limit(length); //in case of the sourceBuffer is not full 
 				byte[] bytes = sourceBuffer.array();
@@ -81,7 +83,7 @@ public class NioFileCollector implements FileCollector<FileChannel> {
 				decoder.decode(sourceBuffer, lineBuffer, true);
 				sourceBuffer.clear(); //clean buffer for next read on the file channel available
 			}
-
+			logger.info("bytes read:[{}], source file position:[{}]", read, source.position());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

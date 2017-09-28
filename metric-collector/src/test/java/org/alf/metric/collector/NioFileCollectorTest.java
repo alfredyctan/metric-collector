@@ -4,17 +4,17 @@ import static java.nio.file.StandardOpenOption.READ;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.commons.io.FileUtils.getFile;
-import static org.apache.commons.io.FileUtils.readLines;
-import static org.apache.commons.io.FileUtils.writeLines;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 
@@ -247,5 +247,58 @@ public class NioFileCollectorTest {
 		List<String> expect = Arrays.asList(new String[] { "0123456789012345", "1123456789112345", "2123456789212345", "3123456789312345" });
 		assertThat("collect simple", listener.getLines(), is(expect));
 		JUnit4Util.endCurrentTest(getClass());
+	}
+
+	@Test
+	public void testCollectFromEnd() throws IOException {
+		JUnit4Util.startCurrentTest(getClass());
+		
+		copyFile(initFile, logFile);
+		
+		NioFileCollector collector = new NioFileCollector(20);
+		MockListener listener = new MockListener();
+		collector.addLineListener(listener);
+		
+		Path path = Paths.get(logFile.toURI());
+		FileChannel fileChannel = FileChannel.open(path, READ);
+		fileChannel.position(fileChannel.size());
+		collector.collect(fileChannel);
+		
+		
+		
+		
+		JUnit4Util.sleep(600000000);
+		fileChannel.close();
+		
+		List<String> expect = Arrays.asList(new String[] { "56789", "1123456789", "2123456789", "3123456789" });
+		assertThat("collect simple", listener.getLines(), is(expect));
+		JUnit4Util.endCurrentTest(getClass());
+	}	
+
+	@Test
+	public void testFileGrowth() throws IOException {
+		JUnit4Util.startCurrentTest(getClass());
+		
+		copyFile(initFile, logFile);
+		
+//		Path path = Paths.get(logFile.toURI());
+//		FileChannel fileChannel = FileChannel.open(path, READ);
+//		fileChannel.position(fileChannel.size());
+		while (true) {
+			try {
+//			logFile = getFile("target/test/init.log");
+			BasicFileAttributes attr = Files.readAttributes(logFile.toPath(), BasicFileAttributes.class);
+			System.out.println(attr.creationTime() + " " + attr.lastModifiedTime());
+			} catch (Exception e) {
+				System.out.println("no file");
+			}
+//			System.out.println(fileChannel.size());
+			JUnit4Util.sleep(1000);
+		}
+
+
+////		JUnit4Util.sleep(1500000);
+//
+//		JUnit4Util.endCurrentTest(getClass());
 	}
 }

@@ -1,7 +1,7 @@
 # metric-collector
 A lightweight application to collect system metric
 
-Demo of
+Example of
 1. maven : parent/child projects dependency management
 2. regular expression : capturing group matching
 3. Jmock basic usage
