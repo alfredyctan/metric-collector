@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.afc.concurrent.NamedThreadFactory;
 import org.afc.logging.SDC;
-import org.alf.metric.line.LineListener;
+import org.alf.metric.buffer.BufferListener;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,8 +92,8 @@ public class PeriodicFileCollector implements FileCollector<File> {
 	}
 
 	@Override
-	public void addLineListener(LineListener listener) {
-		this.collector.addLineListener(listener);
+	public void addBufferListener(BufferListener listener) {
+		this.collector.addBufferListener(listener);
 	}
 
 	public void setCollector(FileCollector<FileChannel> collector) {

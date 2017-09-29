@@ -3,11 +3,11 @@ package org.alf.metric.collector;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.alf.metric.line.LineListener;
+import org.alf.metric.buffer.BufferListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MockListener implements LineListener {
+public class MockListener implements BufferListener {
 
 	private static final Logger logger = LoggerFactory.getLogger(MockListener.class);
 	
@@ -18,9 +18,9 @@ public class MockListener implements LineListener {
 	}
 	
 	@Override
-	public void onLineReceived(CharSequence line) {
-		logger.info("on line received : [{}]", line);
-		lines.add(line.toString());
+	public void onReceived(CharSequence buffer) {
+		logger.info("on line received : [{}]", buffer);
+		lines.add(buffer.toString());
 	}
 
 	public List<CharSequence> getLines() {

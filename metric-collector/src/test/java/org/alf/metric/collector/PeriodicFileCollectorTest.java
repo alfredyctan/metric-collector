@@ -106,7 +106,7 @@ public class PeriodicFileCollectorTest {
 
 		NioFileCollector nioCollector = new NioFileCollector(20);
 		MockListener listener = new MockListener();
-		nioCollector.addLineListener(listener);
+		nioCollector.addBufferListener(listener);
 		
 		PeriodicFileCollector periodicFileCollector = new PeriodicFileCollector();
 		periodicFileCollector.setCollector(nioCollector);
@@ -133,7 +133,7 @@ public class PeriodicFileCollectorTest {
 
 		NioFileCollector nioCollector = new NioFileCollector(20);
 		MockListener listener = new MockListener();
-		nioCollector.addLineListener(listener);
+		nioCollector.addBufferListener(listener);
 		
 		PeriodicFileCollector periodicFileCollector = new PeriodicFileCollector();
 		periodicFileCollector.setCollector(nioCollector);
@@ -158,7 +158,7 @@ public class PeriodicFileCollectorTest {
 
 		NioFileCollector nioCollector = new NioFileCollector(20);
 		MockListener listener = new MockListener();
-		nioCollector.addLineListener(listener);
+		nioCollector.addBufferListener(listener);
 		
 		PeriodicFileCollector periodicFileCollector = new PeriodicFileCollector();
 		periodicFileCollector.setCollector(nioCollector);
@@ -182,7 +182,7 @@ public class PeriodicFileCollectorTest {
 
 		NioFileCollector nioCollector = new NioFileCollector(20);
 		MockListener listener = new MockListener();
-		nioCollector.addLineListener(listener);
+		nioCollector.addBufferListener(listener);
 		
 		PeriodicFileCollector periodicFileCollector = new PeriodicFileCollector();
 		periodicFileCollector.setCollector(nioCollector);
@@ -208,7 +208,7 @@ public class PeriodicFileCollectorTest {
 
 		NioFileCollector nioCollector = new NioFileCollector(20);
 		MockListener listener = new MockListener();
-		nioCollector.addLineListener(listener);
+		nioCollector.addBufferListener(listener);
 		
 		PeriodicFileCollector periodicFileCollector = new PeriodicFileCollector();
 		periodicFileCollector.setCollector(nioCollector);

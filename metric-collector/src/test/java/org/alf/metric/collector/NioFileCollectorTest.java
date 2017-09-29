@@ -76,7 +76,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(12);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -96,7 +96,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(10);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -116,7 +116,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(8);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -136,7 +136,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(22);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -156,7 +156,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(24);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -176,7 +176,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(40);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -196,7 +196,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(20);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -217,7 +217,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(1);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -237,7 +237,7 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(4);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
@@ -257,48 +257,17 @@ public class NioFileCollectorTest {
 		
 		NioFileCollector collector = new NioFileCollector(20);
 		MockListener listener = new MockListener();
-		collector.addLineListener(listener);
+		collector.addBufferListener(listener);
 		
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		fileChannel.position(fileChannel.size());
 		collector.collect(fileChannel);
 		
-		
-		
-		
-		JUnit4Util.sleep(600000000);
 		fileChannel.close();
 		
-		List<String> expect = Arrays.asList(new String[] { "56789", "1123456789", "2123456789", "3123456789" });
+		List<String> expect = Arrays.asList(new String[] {});
 		assertThat("collect simple", listener.getLines(), is(expect));
 		JUnit4Util.endCurrentTest(getClass());
 	}	
-
-	@Test
-	public void testFileGrowth() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
-		copyFile(initFile, logFile);
-		
-//		Path path = Paths.get(logFile.toURI());
-//		FileChannel fileChannel = FileChannel.open(path, READ);
-//		fileChannel.position(fileChannel.size());
-		while (true) {
-			try {
-//			logFile = getFile("target/test/init.log");
-			BasicFileAttributes attr = Files.readAttributes(logFile.toPath(), BasicFileAttributes.class);
-			System.out.println(attr.creationTime() + " " + attr.lastModifiedTime());
-			} catch (Exception e) {
-				System.out.println("no file");
-			}
-//			System.out.println(fileChannel.size());
-			JUnit4Util.sleep(1000);
-		}
-
-
-////		JUnit4Util.sleep(1500000);
-//
-//		JUnit4Util.endCurrentTest(getClass());
-	}
 }

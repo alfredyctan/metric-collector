@@ -9,7 +9,7 @@ import java.nio.charset.CharsetDecoder;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.alf.metric.line.LineListener;
+import org.alf.metric.buffer.BufferListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public class NioFileCollector implements FileCollector<FileChannel> {
 
 	private static final byte N = 0x0A;
 
-	private List<LineListener> listeners;
+	private List<BufferListener> listeners;
 
 	private CharsetDecoder decoder;
 	
@@ -68,7 +68,7 @@ public class NioFileCollector implements FileCollector<FileChannel> {
 						
 						lineBuffer.position(0); //set lineBuffer to be readable
 						if (lineBuffer.limit() != 0) { // do not trigger empty line
-							fireOnLineReceived(lineBuffer);
+							fireOnReceived(lineBuffer);
 						}
 						lineBuffer.clear();
 					}
@@ -90,16 +90,16 @@ public class NioFileCollector implements FileCollector<FileChannel> {
 	}
 
 	@Override
-	public void addLineListener(LineListener listener) {
+	public void addBufferListener(BufferListener listener) {
 		synchronized (listeners) {
 			listeners.add(listener);
 		}
 	}
 
-	private void fireOnLineReceived(CharSequence line) {
+	private void fireOnReceived(CharSequence buffer) {
 		synchronized (listeners) {
-			for (LineListener listener : listeners) {
-				listener.onLineReceived(line);
+			for (BufferListener listener : listeners) {
+				listener.onReceived(buffer);
 			}
 		}
 	}
