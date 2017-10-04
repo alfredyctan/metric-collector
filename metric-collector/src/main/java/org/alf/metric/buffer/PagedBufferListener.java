@@ -28,6 +28,7 @@ public class PagedBufferListener implements BufferListener {
 		this.pageBuffer = CharBuffer.allocate(8192);
 	}
 
+	/* for junit test */
 	public PagedBufferListener(String pageBreak, int size, BufferListener listener) {
 		this.pageBreak = pageBreak;
 		this.listeners = Arrays.asList(listener);

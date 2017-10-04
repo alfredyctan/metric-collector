@@ -37,7 +37,7 @@ public class CapturingGroupNamedValueParserTest {
 		JUnit4Util.startCurrentTest(getClass());
 		
 		CapturingGroupNamedValueParser parser = new CapturingGroupNamedValueParser(".*?\\[(?<thread>.*?)\\]\\[.*?\\]\\[(?<clazz>.*?)\\].*");
-		Map<String, String> actual = parser.parse("2017-09-25 21:23:13.141 [main][INFO ][o.a.m.collector.NioFileCollector] last size : 58");
+		Map<String, Object> actual = parser.parse("2017-09-25 21:23:13.141 [main][INFO ][o.a.m.collector.NioFileCollector] last size : 58");
 		
 		assertThat("name and value", actual, allOf(
 				hasEntry("thread", "main"),

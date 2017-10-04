@@ -4,6 +4,6 @@ import java.util.Map;
 
 public interface NamedValueParser {
 
-	public Map<String, String> parse(CharSequence line);
+	public Map<String, Object> parse(CharSequence line);
 	
 }

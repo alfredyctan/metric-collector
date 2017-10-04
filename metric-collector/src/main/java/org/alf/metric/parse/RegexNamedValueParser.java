@@ -21,12 +21,12 @@ public class RegexNamedValueParser implements NamedValueParser {
 	}
 
 	@Override
-	public Map<String, String> parse(CharSequence line) {
-		Map<String, String> map = new LinkedHashMap<>();
+	public Map<String, Object> parse(CharSequence line) {
+		Map<String, Object> map = new LinkedHashMap<>();
 		Matcher matcher = compliedLinePattern.matcher(line);
 		if (matcher.find()) {
 			for (int i = 0; i < names.size(); i++) {
-				map.put(names.get(i), matcher.group(i + 1));
+				map.put(names.get(i), ParseUtil.parseNumeric(matcher.group(i + 1)));
 			}
 		}
 		return map;

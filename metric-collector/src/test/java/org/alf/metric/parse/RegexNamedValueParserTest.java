@@ -38,7 +38,7 @@ public class RegexNamedValueParserTest {
 		JUnit4Util.startCurrentTest(getClass());
 		
 		RegexNamedValueParser parser = new RegexNamedValueParser(".*?\\[(%thread=.*?%)\\]\\[.*?\\]\\[(%clazz=.*?%)\\].*");
-		Map<String, String> actual = parser.parse("2017-09-25 21:23:13.141 [main][INFO ][o.a.m.collector.NioFileCollector] last size : 58");
+		Map<String, Object> actual = parser.parse("2017-09-25 21:23:13.141 [main][INFO ][o.a.m.collector.NioFileCollector] last size : 58");
 		
 		assertThat("name and value", actual, allOf(
 				hasEntry("thread", "main"),
@@ -58,7 +58,7 @@ public class RegexNamedValueParserTest {
 		buffer.append("2017-09-25 21:23:13.141 [main][INFO ][o.a.m.collector.NioFileCollector] last size : 58");
 		buffer.position(0);
 		
-		Map<String, String> actual = parser.parse(buffer);
+		Map<String, Object> actual = parser.parse(buffer);
 		
 		assertThat("name and value", actual, allOf(
 				hasEntry("thread", "main"),
