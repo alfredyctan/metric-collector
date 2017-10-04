@@ -2,7 +2,6 @@ package org.alf.metric.expr;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -18,12 +17,10 @@ public class CsvExpressionEvaluator implements ExpressionEvaulator {
 
 	private Map<String, String> expressions;
 
-	private ScriptEngine engine;
-
-	private Pattern PATTERN = Pattern.compile("\\\"([^\\\"]*)\\\"|(?:[=\\+\\*/]|^)(\\w*)");
+	private ThreadLocal<ScriptEngine> engine = new ThreadLocal<>();
 
 	public CsvExpressionEvaluator(String expression) {
-		engine = new ScriptEngineManager().getEngineByName("groovy");
+		engine.set(new ScriptEngineManager().getEngineByName("groovy"));
 
 		expressions = new HashMap<>();
 		for (String expr : expression.split(",")) {
@@ -60,10 +57,11 @@ public class CsvExpressionEvaluator implements ExpressionEvaulator {
 			if (paramValue != null) {
 				evaluatedValue = paramValue.toString();
 			} else {
-				Bindings bindings = engine.createBindings();
+				ScriptEngine script = engine.get();
+				Bindings bindings = script.createBindings();
 				bindings.putAll(params);
 				try {
-					evaluatedValue = engine.eval(entryValue, bindings).toString();
+					evaluatedValue = script.eval(entryValue, bindings).toString();
 				} catch (ScriptException e) {
 					logger.error("cannot evalute expression:[{}]", entry.getValue());
 				}
