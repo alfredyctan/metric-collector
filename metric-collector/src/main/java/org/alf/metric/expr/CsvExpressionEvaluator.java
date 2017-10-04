@@ -27,8 +27,6 @@ public class CsvExpressionEvaluator implements ExpressionEvaulator {
 
 		expressions = new HashMap<>();
 		for (String expr : expression.split(",")) {
-			logger.info("split expression:[{}]", expr);
-
 			int index = expr.indexOf('=');
 			if (expr.startsWith("\"") && expr.endsWith("\"")) {
 				if (index == -1) {
