@@ -1,273 +1,297 @@
 package org.alf.metric.collector;
 
-import static java.nio.file.StandardOpenOption.READ;
-import static org.apache.commons.io.FileUtils.copyFile;
-import static org.apache.commons.io.FileUtils.deleteDirectory;
-import static org.apache.commons.io.FileUtils.getFile;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static java.nio.file.StandardOpenOption.*;
+import static java.util.Arrays.*;
+import static org.afc.util.JUnitUtil.*;
+import static org.afc.util.JUnitUtil.copyFile;
+import static org.apache.commons.io.FileUtils.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import org.afc.util.JUnit4Util;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.afc.junit5.extension.TestInfoExtension;
+import org.alf.metric.MetricCollectorExtension;
+import org.alf.metric.buffer.BufferListener;
+import org.alf.metric.config.Config.Source;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer.MethodName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 
-public class NioFileCollectorTest {
+@ExtendWith({ MetricCollectorExtension.class, TestInfoExtension.class })
+@TestInstance(Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodName.class)
+class NioFileCollectorTest {
 
 	private static File logDir;
 
 	private static File logFile;
-	
+
 	private static File initFile;
-	
+
 	private static File initLongLineFile;
 
+	private static File initNewLine;
+
 	private static File increFile;
-	
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
+
+	private Source source;
+
+	private BufferListener.Factory factory;
+
+	private MockBufferListener lineListener;
+
+	@BeforeAll
+	static void setUpBeforeClass() throws Exception {
 		logDir = getFile("target/test");
 		logFile = getFile("target/test/init.log");
 		initFile = getFile("src/test/resources/log/init.log");
 		initLongLineFile = getFile("src/test/resources/log/init-long-line.log");
 		increFile = getFile("src/test/resources/log/roll-increment.log");
+		initNewLine = getFile("src/test/resources/log/init-newline.log");
 	}
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
+	@AfterAll
+	static void tearDownAfterClass() throws Exception {
 	}
 
-	@Before
-	public void setUp() throws Exception {
-		try {
-			deleteDirectory(getFile(logDir));
-		} catch (Exception e) {
-			
-		}
-	}
-
-	@After
-	public void tearDown() throws Exception {
+	@BeforeEach
+	void setUp() throws Exception {
+		source = new Source().setBuffer(20);
+		factory = Mockito.mock(BufferListener.Factory.class);
+		lineListener = new MockBufferListener();
+		when(factory.createLine(any(Source.class), any(Map.class))).thenReturn(lineListener);
 		try {
 			deleteDirectory(getFile(logDir));
 		} catch (Exception e) {
 
 		}
+		logDir.mkdirs();
+	}
+
+	@AfterEach
+	void tearDown() throws Exception {
 	}
 
 	@Test
-	public void testCollectSizeBufferEqualToLine() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectSizeBufferEqualToLine() throws IOException {
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(12);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(12), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123456789", "1123456789", "2123456789", "3123456789" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("0123456789\n", "1123456789\n", "2123456789\n", "3123456789\n"));
+		assertContains("collect simple", actual, expect);
 	}
 
 	@Test
-	public void testCollectSizeBufferLessThanLine() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectSizeBufferLessThanLine() throws IOException {
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(10);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(10), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123456789", "1123456789", "2123456789", "3123456789" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList( "0123456789\n", "1123456789\n", "2123456789\n", "3123456789\n"));
+		assertContains("collect simple", actual, expect);
 	}
 
 	@Test
-	public void testCollectSizeBufferLessThanLineMore() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectSizeBufferLessThanLineMore() throws IOException {
+
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(8);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(8), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123456789", "1123456789", "2123456789", "3123456789" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("0123456789\n", "1123456789\n", "2123456789\n", "3123456789\n" ));
+		assertContains("collect simple", actual, expect);
 	}
 
 	@Test
-	public void testCollectSizeBufferMoreThanLine() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectSizeBufferMoreThanLine() throws IOException {
+
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(22);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(22), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123456789", "1123456789", "2123456789", "3123456789" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("0123456789\n", "1123456789\n", "2123456789\n", "3123456789\n" ));
+		assertContains("collect simple", actual, expect);
 	}
 
 	@Test
-	public void testCollectSizeBufferMoreThan2Line() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectSizeBufferMoreThan2Line() throws IOException {
+
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(24);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(24), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123456789", "1123456789", "2123456789", "3123456789" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
-	}	
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("0123456789\n", "1123456789\n", "2123456789\n", "3123456789\n" ));
+		assertContains("collect simple", actual, expect);
+	}
 
 	@Test
-	public void testCollectSizeBufferMoreThan3Line() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectSizeBufferMoreThan3Line() throws IOException {
+
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(40);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(40), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123456789", "1123456789", "2123456789", "3123456789" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
-	}	
-	
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("0123456789\n", "1123456789\n", "2123456789\n", "3123456789\n" ));
+		assertContains("collect simple", actual, expect);
+	}
+
 	@Test
-	public void testCollectFromMiddle() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectFromMiddle() throws IOException {
+
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(20);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(20), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		fileChannel.position(5);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "56789", "1123456789", "2123456789", "3123456789" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
-	}	
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("56789\n", "1123456789\n", "2123456789\n", "3123456789\n" ));
+		assertContains("collect simple", actual, expect);
+	}
 
 	@Test
-	public void testCollectOneByteBuffer() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectOneByteBuffer() throws IOException {
+
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(1);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(1), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123", "1123", "2123", "3123" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("0123", "4567", "89\n", "1123", "4567", "89\n", "2123", "4567", "89\n", "3123", "4567", "89\n", "4123", "4567"));
+		assertContains("collect simple", actual, expect);
 	}
-	
+
 	@Test
-	public void testCollectLongLine() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectLongLine() throws IOException {
 		copyFile(initLongLineFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(4);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(4), Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		collector.collect(fileChannel);
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] { "0123456789012345", "1123456789112345", "2123456789212345", "3123456789312345" });
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("0123456789012345", "6789\n", "1123456789112345", "6789\n", "2123456789212345", "6789\n", "3123456789312345", "6789\n", "4123456789412345"));
+		assertThat("collect simple", actual, is(expect));
 	}
 
 	@Test
-	public void testCollectFromEnd() throws IOException {
-		JUnit4Util.startCurrentTest(getClass());
-		
+	void testCollectLongLineOverflowDiscarded() throws IOException {
+		copyFile(initLongLineFile, logFile);
+
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(3), Map.of(), factory);
+
+		Path path = Paths.get(logFile.toURI());
+		FileChannel fileChannel = FileChannel.open(path, READ);
+		collector.collect(fileChannel);
+		fileChannel.close();
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("012345678901", "23456789\n", "112345678911", "23456789\n", "212345678921", "23456789\n", "312345678931", "23456789\n", "412345678941"));
+		assertContains("collect simple", actual, expect);
+	}
+
+	@Test
+	void testCollectFromEnd() throws IOException {
 		copyFile(initFile, logFile);
-		
-		NioFileCollector collector = new NioFileCollector(20);
-		MockListener listener = new MockListener();
-		collector.addBufferListener(listener);
-		
+
+		NioFileCollector collector = new NioFileCollector(source, Map.of(), factory);
+
 		Path path = Paths.get(logFile.toURI());
 		FileChannel fileChannel = FileChannel.open(path, READ);
 		fileChannel.position(fileChannel.size());
 		collector.collect(fileChannel);
-		
+
 		fileChannel.close();
-		
-		List<String> expect = Arrays.asList(new String[] {});
-		assertThat("collect simple", listener.getLines(), is(expect));
-		JUnit4Util.endCurrentTest(getClass());
-	}	
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = Arrays.asList(new String[] {});
+		assertContains("collect simple", actual, expect);
+	}
+
+	@Test
+	void testCollectPreviousNewLineBuffer() throws IOException {
+		NioFileCollector collector = new NioFileCollector(source.setBuffer(12), Map.of(), factory);
+
+		copyFile(initNewLine, logFile);
+		Path path = Paths.get(logFile.toURI());
+		FileChannel fileChannel = FileChannel.open(path, READ);
+		collector.collect(fileChannel);
+
+		copyFile(initFile, logFile);
+		fileChannel = FileChannel.open(path, READ);
+		collector.collect(fileChannel);
+
+		fileChannel.close();
+
+		List<CharSequence> actual = actual(lineListener.getLines());
+		List<CharSequence> expect = expect(asList("\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "0123456789\n", "1123456789\n", "2123456789\n", "3123456789\n" ));
+		assertContains("collect simple", actual, expect);
+	}
 }

@@ -1,0 +1,60 @@
+spring.main.allow-bean-definition-overriding: true
+
+spring.main.banner-mode: log
+spring.output.ansi.enabled: DETECT
+
+server:
+  port: 0
+
+management.server:
+  port: 0
+
+metric-collector:
+  writers:
+    reactive:
+      interval: 100
+      batch: 1
+    elastic-search:
+      url: http://127.0.0.1:1083
+  worker:
+    source: 10
+    process: 100
+    writer: 10
+  launch:
+    genesis: 2021-11-25T12:00:00Z
+    source: 
+      pattern: jmeter\.(?<cluster>.*?)\.(?<instance>.*?)\..*?\.log\..*$
+      paths: 
+      - target/test
+      beginning: true
+      interval: 500
+      buffer: 1024
+      page-break: '^\d\d\d\d-\d\d-\d\d '
+      captures:
+      - contains:
+        - '[MARKER] - TIMESHIFT' 
+        pattern: '^(?<msgtime>.*?) \[(?<level>.*?)\]\[(?<ctx>.*?)\]\[(?<tid>.*?)\]\[(?<logger>.*?)\] : \[MARKER\] - TIMESHIFT.*$'
+        timestamp: 
+          tag: msgtime
+          pattern: yyyy-MM-dd HH:mm:ss.SSS Z
+  sources:
+  - pattern: (?<service>.*?)\.(?<cluster>.*?)\.(?<instance>.*?)\..*?\..*?\.log\..*$
+    paths: 
+    - target/test
+    beginning: true
+    interval: 500
+    buffer: 1024
+    page-break: '^\d\d\d\d-\d\d-\d\d '
+    captures:
+    - contains:
+      - '[OUT]' 
+      pattern: '^(?<msgtime>.*?) \[(?<level>.*?)\]\[(?<ctx>.*?)\]\[(?<tid>.*?)\]\[(?<logger>.*?)\] : \[(?<check>.*?)\].*?start:\[(?<start>.*?)\].*?total:\[(?<total>.*?)\].*?segment:\[(?<segment>.*?)\].*$'
+      name: '%{$sys(BUILD_NUMBER)}.%{$sys(TEST_PACK)}'
+      timestamp: 
+        tag: msgtime
+        pattern: yyyy-MM-dd HH:mm:ss.SSS Z
+      indexes: 
+        level: '%{#level}'
+      tags:
+        msg_time: '%{#msgtime}'
+        msgtime: '%{!!}'

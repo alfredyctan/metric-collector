@@ -1,0 +1,25 @@
+
+MetricCollector (launch control)
+ -> PathFileCollector (search file for given path pattern) (multi match?)
+       -> read all inline, sort by modify time, last one maintain Periodic
+	   -> invoke PeriodicFileCollector (create fileChannel, period trigger, detect file reset)
+	       -> invoke NioFileCollector (read filechannel util crlf)
+	           -> invoke PagedBufferListener (concat line until line break)
+	               -> invoke LineBufferListener (handle multi line as one)
+	                   |- check match
+	                   |- CapturingGroupNamedValueParser (regex: regB)
+	                   |- MetricBuilder ( tags and index)
+	                   |- MetricWriter
+ 
+ -> PathFileCollector (search file for given path pattern) 
+	   -> invoke PeriodicFileCollector (create fileChannel, period trigger, detect file reset)
+	       -> invoke NioFileCollector (read filechannel util crlf)
+	           -> invoke PagedBufferListener (concat line until line break)
+	               -> invoke LaunchLineBufferListener (handle multi line as one)
+	                   |- check match
+	                   |- launch
+	                   |- terminate this collector
+
+Dynamic Buffer of CharBuffer and CharSeq
+LaunchControl Hold in PathFileCollector
+PathCollector read all file recursive

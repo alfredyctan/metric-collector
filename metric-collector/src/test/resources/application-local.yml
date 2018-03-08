@@ -1,0 +1,41 @@
+spring.main.allow-bean-definition-overriding: true
+
+spring.main.banner-mode: log
+spring.output.ansi.enabled: DETECT
+
+server:
+  port: 10083
+
+management.server:
+  port: 10084
+
+metric-collector:
+  writers:
+    reactive:
+      interval: 100
+      batch: 1
+    elastic-search:
+      url: http://127.0.0.1:1083
+  worker:
+    source: 10
+    process: 100
+    writer: 10
+  sources:
+  - pattern: (?<service>.*?)\.(?<cluster>.*?)\.(?<instance>.*?)\..*?\..*?\.log\..*$
+    paths: 
+    - target/test
+    beginning: false
+    interval: 1000
+    buffer: 1024
+    page-break: '^\d\d\d\d-\d\d-\d\d '
+    captures:
+    - contains:
+      - '[OUT]' 
+      pattern: '^(?<msgtime>.*?) \[(?<level>.*?)\]\[(?<ctx>.*?)\]\[(?<tid>.*?)\]\[(?<logger>.*?)\] : \[(?<check>.*?)\].*?start:\[(?<start>.*?)\].*?total:\[(?<total>.*?)\].*?segment:\[(?<segment>.*?)\].*$'
+      name: '%{$sys(BUILD_NUMBER)}.%{$sys(TEST_PACK)}'
+      timestamp: 
+        tag: msgtime
+        pattern: yyyy-MM-dd HH:mm:ss.SSS Z
+      tags:
+        msg_time: '%{#msgtime}'
+        msgtime: '%{!!}'

@@ -1,0 +1,2 @@
+2022-03-09 12:28:56.893 +0000 [ INFO][K552885M][00050][.rfq.api.v1.submit                      ] : [OUT] start:[33832160], total:[1373], segment:[1367]
+2022-03-09 12:29:07.235 +0000 [ INFO][K552885M][00050][.s.a.ContineoTokenAuthenticationProvider] : ContineoAuthenticationToken [Principal=null, Credentials=[PROTECTED], Authenticated=false, Details=null, Granted Authorities=[]]

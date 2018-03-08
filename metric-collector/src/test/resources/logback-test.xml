@@ -1,15 +1,18 @@
-<configuration>
-  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread][%-5level][%logger{36}] %msg%n</pattern>
-    </encoder>
-  </appender>
+<configuration scan="true" scanPeriod="30 seconds">
+	<jmxConfigurator />
+	<include resource="logback-test-appender.xml" />
+	<include resource="env/${sys.env}/logback-logger.xml" optional="true" />
 
-  <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-    <appender-ref ref="CONSOLE" />
-  </appender>
-
-  <root level="debug">
-    <appender-ref ref="ASYNC" />
-  </root>
+	<appender name="ASYNC-FILE" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="MAIN-FILE" />
+	</appender>
+	<appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="MAIN" />
+	</appender>
+	<appender name="TEST" class="org.afc.logging.TestAppender" />
+	<root level="INFO">
+		<appender-ref ref="ASYNC" />
+		<appender-ref ref="ASYNC-FILE" />
+		<appender-ref ref="TEST" />
+	</root>
 </configuration>

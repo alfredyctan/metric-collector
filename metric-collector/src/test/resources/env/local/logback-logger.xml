@@ -1,0 +1,5 @@
+<included>
+<!-- 	<logger name="org.alf.metric" level="TRACE" /> -->
+   <logger name="org.mockserver.mockserver.MockServerHandler" level="ERROR" />
+   <logger name="org.mockserver.matchers.HttpRequestMatcher" level="ERROR" />
+</included>

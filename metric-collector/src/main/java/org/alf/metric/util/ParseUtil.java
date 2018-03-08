@@ -1,4 +1,4 @@
-package org.alf.metric.parse;
+package org.alf.metric.util;
 
 import java.math.BigDecimal;
 
