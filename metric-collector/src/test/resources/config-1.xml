@@ -1,0 +1,27 @@
+<config interval="">
+	<file path="">
+		<metric name="">
+			<match></match>
+			<regex></regex>
+			<tag></tag>
+			<index></index>
+			<value></value>
+		</metric>
+		<metric name="">
+			<match></match>
+			<regex></regex>
+			<tag></tag>
+			<index></index>
+			<value></value>
+		</metric>
+	</file>
+	<file path="">
+		<metric name="">
+			<match></match>
+			<regex></regex>
+			<tag></tag>
+			<index></index>
+			<value></value>
+		</metric>
+	</file>
+</config>
